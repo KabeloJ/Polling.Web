@@ -1,0 +1,96 @@
+﻿@page "/"
+@using DataAccess
+@using DataAccess.Context
+@using DataAccess.Data
+@using DataAccess.Services
+@inject PollDataAccess _pollData
+@inject PollPublishService _service
+@inject AuthenticationStateProvider _provider
+@inject NavigationManager _nav
+@using System.Security.Claims
+
+<PageTitle>Index</PageTitle>
+
+<div class="row justify-content-center">
+    <div class="col-md-8 text-center p-2 mt-2 bg-light rounded">
+        <h1 class="display-4">Welcome to the Poll System</h1>
+        <p class="p-2">
+            This app is a powerful poll system that allows you to create, participate in, and manage polls with ease.
+            A poll system typically collects votes on a specific question or topic, offering a simple way to gather
+            opinions or make decisions based on group input.
+        </p>
+        <p class="p-2 mt-2">
+            Get started by creating your first poll or exploring existing polls to share your opinions!
+        </p>
+        <a href="Polls" class="btn btn-primary btn-sm mt-3">Get Started</a>
+    </div>
+</div>
+
+
+<div class="m-2 p-2 mt-4">
+    
+    @if (publicPolls != null)
+    {
+        <h4>View Latest Polls</h4>
+        
+            <div class="row">
+
+            @foreach (var item in publicPolls.OrderBy(x => x.DateCreated))
+            {
+                <div class="col-md-4">
+                        <div class="card p-2 m-2 bg-light">
+                            <div class="row">
+                                <div class="col-12">
+                                    <h5>@item.PollName</h5>
+                                </div>
+                            </div>
+                            <p class="small">@item.PollDescription</p>
+                            <div class="p-2">
+                                <div class="row">
+                                    <div class="col-6">
+                                    @if (UserId != null && _service.CheckUserVote(UserId, item.PublicId))
+                                    {
+                                        <button type="button" class="btn btn-sm btn-primary" @onclick="(()=>CheckUserLogin(item.PublicId))" title="Click To View">Voted</button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-primary" @onclick="(()=>CheckUserLogin(item.PublicId))">Vote</button>
+                                    }
+                                    </div>
+                                    <div class="col-6 text-right small text-nowrap">
+                                        @item.DateCreated.ToShortDateString()
+                                    </div>
+                                </div>
+                            </div>
+
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+@code {
+
+    private List<DataAccess.Context.Poll> publicPolls;
+    string UserId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await _provider.GetAuthenticationStateAsync();
+        UserId = auth.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        publicPolls = _pollData.GetPublicPolls();
+    }
+    async Task CheckUserLogin(string publicId)
+    {
+        var auth = await _provider.GetAuthenticationStateAsync();
+        if (auth.User.FindFirstValue(ClaimTypes.NameIdentifier) == null)
+        {
+            _nav.NavigateTo("Identity/Account/Login", true);
+        }
+        else
+        {
+
+            _nav.NavigateTo("Vote/" + publicId, true);
+        }
+    }
+}

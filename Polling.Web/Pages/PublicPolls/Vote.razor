@@ -1,0 +1,164 @@
+﻿@page "/Vote/{id}"
+@using DataAccess
+@using DataAccess.Context
+@using DataAccess.Models
+@using System.Security.Claims
+@using DataAccess.Services
+@inject AuthenticationStateProvider _provider
+@inject PollPublishService _service
+
+<div class="m-2 p-2">
+
+    @if (UserId != null)
+    {
+        @if (pollModel != null && pollModel.poll != null && pollModel.poll.IsPublished)
+        {
+            <div>
+                <a href="">Home</a>><label class="text-black-50">@pollModel.poll.PollName</label>
+            </div>
+
+            <div class="row">
+                <div class="col-md-10">
+
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="row  p-2 m-2">
+                                    <div class="col-9">
+                                        <h5>@pollModel.poll.PollName</h5>
+                                    </div>
+                                    <div class="col-3 text-right">
+
+                                        @if (UserVotes != null && UserVotes.Count > 0)
+                                        {
+                                            <span class="badge bg-success">
+                                                Submitted
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle" viewBox="0 0 16 16">
+                                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                                                    <path d="m10.97 4.97-.02.022-3.473 4.425-2.093-2.094a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05" />
+                                                </svg>
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                                <p class="small p-2">@pollModel.poll.PollDescription</p>
+                                <EditForm Model="pollModel" OnSubmit="SavePoll">
+
+                                    <div class="p-1">
+                                        @foreach (var answer in pollModel.Answers.OrderBy(x => x.SequenceNo))
+                                        {
+                                            <div class="card p-2 m-2">
+                                                <div class="row">
+                                                    <div class="col-12">
+                                                        <div class="input-group" style="font-weight:bold">
+                                                            <span class="text-danger">*</span>@answer.QuestionContent
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row p-1 m-1 mb-3 mt-0">
+                                                    <div class="col-12">
+                                                        @if (answer.SelectedOptions != null)
+                                                        {
+                                                            if (UserVotes != null && UserVotes.Count  > 0)
+                                                            {
+                                                                foreach (var item in answer.SelectedOptions.OrderBy(x => x.SelectedOptionId))
+                                                                {
+                                                                    <div class="input-group mt-2">
+                                                                        @if (UserVotes.Where(x=>x.SelectedOptionId == item.SelectedOptionId).FirstOrDefault() != null)
+                                                                        {
+                                                                            <input type="radio" id="Option-@item.SelectedOptionId" name="@item.AnswerId" checked disabled/>
+                                                                        }
+                                                                        else
+                                                                        {
+
+                                                                            <input type="radio" id="Option-@item.SelectedOptionId" name="@item.AnswerId" disabled />
+                                                                        }
+                                                                        <label for="Option-@item.SelectedOptionId">&nbsp;@item.OptionContent</label>
+                                                                    </div>
+                                                                }
+                                                            }
+                                                            else
+                                                            {
+                                                                foreach (var item in answer.SelectedOptions.OrderBy(x => x.SelectedOptionId))
+                                                                {
+                                                                    <div class="input-group mt-2">
+                                                                        <input type="radio" id="Option-@item.SelectedOptionId" name="@item.AnswerId" @onclick="(()=>RadioClick(item, answer.SelectedOptions))" required />
+                                                                        <label for="Option-@item.SelectedOptionId">&nbsp;@item.OptionContent</label>
+                                                                    </div>
+                                                                }
+                                                            }
+
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                    @if (UserVotes == null || UserVotes.Count == 0)
+                                    {
+                                        <div class="p-2 m-2 text-right">
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">Submit</button>
+                                        </div>
+                                    }
+                                </EditForm>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+    }
+    else
+    {
+        <p>
+            You need to be logged in to Create Polls
+            <br />
+            <a href="Identity/Account/Login">Login</a>
+        </p>
+    }
+
+</div>
+
+
+@code {
+
+    [Parameter] public string id { get; set; }
+    private string UserId { get; set; }
+    public PollVoteModel pollModel {get; set;}
+    public List<UsersVote> UserVotes { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await _provider.GetAuthenticationStateAsync();
+        UserId = auth.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        pollModel = new PollVoteModel(id);
+        pollModel.UserId = UserId;
+
+        UserVotes = _service.GetUserVotes(UserId, id);
+    }
+    void RadioClick(SelectedOption option, List<SelectedOption> selectedOptions)
+    {
+        if (option != null)
+        {
+            foreach (var item in selectedOptions.Where(x=>x.IsSelected))
+            {
+                item.IsSelected = false;
+            }
+            if (option.IsSelected == false)
+            {
+                option.IsSelected = true;
+            }
+        }
+    }
+    void SavePoll()
+    {
+        bool submitted = _service.SubmitVote(pollModel);
+        if (submitted)
+        {
+            UserVotes = _service.GetUserVotes(UserId, id);
+            this.StateHasChanged();
+        }
+    }
+}

@@ -1,0 +1,102 @@
+﻿@page "/PollResults/{id}"
+@using DataAccess
+@using DataAccess.Context
+@using DataAccess.Models
+@using System.Security.Claims
+@using DataAccess.Services
+@inject AuthenticationStateProvider _provider
+@inject PollPublishService _service
+
+<div class="m-2 p-2">
+
+    @if (UserId != null)
+    {
+        @if (pollModel != null && pollModel.poll != null && pollModel.poll.IsPublished)
+        {
+            <div>
+                <a href="Polls">Polls</a>&nbsp;>&nbsp;<label class="text-black-50">@pollModel.poll.PollName</label>
+            </div>
+
+            <div class="row">
+                <div class="col-md-10">
+
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="row  p-2 m-2">
+                                    <div class="col-9">
+                                        <h5>@pollModel.poll.PollName</h5>
+                                    </div>
+                                </div>
+                                <p class="small p-2">@pollModel.poll.PollDescription</p>
+
+                                    <div class="p-1">
+                                        @foreach (var answer in pollModel.Answers.OrderBy(x => x.SequenceNo))
+                                        {
+                                            <div class="card p-2 m-2">
+                                                <div class="row">
+                                                    <div class="col-12">
+                                                        <div class="input-group" style="font-weight:bold">
+                                                            <span class="text-danger">*</span>@answer.QuestionContent
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row p-1 m-1 mb-3 mt-0">
+                                                    <div class="col-12">
+                                                        @if (answer.SelectedOptions != null)
+                                                        {
+                                                            foreach (var item in answer.SelectedOptions.OrderBy(x => x.SelectedOptionId))
+                                                            {
+                                                                <div class="input-group mt-2">
+                                                                    <span class="badge bg-info small text-black">
+                                                                        @UserVotes.Where(x => x.PublicId == answer.PollPublicId && x.SelectedOptionId == item.SelectedOptionId).Count()
+                                                                    </span>
+                                                                    &nbsp;&nbsp;
+                                                                    <input type="radio" id="Option-@item.SelectedOptionId" name="@item.AnswerId" disabled />
+                                                                    <label for="Option-@item.SelectedOptionId">&nbsp;@item.OptionContent</label>
+                                                                </div>
+                                                            }
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+    }
+    else
+    {
+        <p>
+            You need to be logged in to Create Polls
+            <br />
+            <a href="Identity/Account/Login">Login</a>
+        </p>
+    }
+
+</div>
+
+
+@code {
+    // PublicId
+    [Parameter] public string id { get; set; }
+    private string UserId { get; set; }
+    public PollVoteModel pollModel { get; set; }
+    public List<UsersVote> UserVotes { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await _provider.GetAuthenticationStateAsync();
+        UserId = auth.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        pollModel = new PollVoteModel(id);
+        pollModel.UserId = UserId;
+
+        UserVotes = _service.GetVotesForPoll(id);
+    }
+}

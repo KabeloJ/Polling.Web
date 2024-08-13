@@ -1,0 +1,206 @@
+﻿@using DataAccess.Context
+@using DataAccess;
+@using DataAccess.Data
+@inject QuestionDataAccess _questionData
+@inject OptionDataAccess _optionData
+@inject IJSRuntime _js
+
+    <div class="">
+        <h5>@pollName</h5>
+    </div>
+    <div class="p-2">
+        @if (questionsModel != null)
+        {
+            foreach (var model in questionsModel.OrderBy(x=>x.SequenceNo))
+            {
+                <div class="row">
+                    <div class="col-12">
+                        <div class="input-group">
+                            <input type="text" class="form-control form-control-sm" @bind="model.QuestionContent" placeholder="Question" />
+                            <button type="button" class="btn btn-sm btn-outline-primary" @onclick="(()=>CreateQuestions(model))">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check2" viewBox="0 0 16 16">
+                                    <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0" />
+                                </svg>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" @onclick="(()=>DeleteQuestion(model))">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
+                                    <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="row p-2 m-1 mb-3 mt-0 border">
+                    <div class="col-12">
+                        @if (model.Options != null)
+                        {
+                            @foreach (var item in model.Options.Where(x=>x.OptionId > 0).OrderBy(x=>x.OptionId))
+                            {
+                                <div class="input-group mt-2">
+                                    <input type="radio" disabled/>&nbsp;
+                                    @if (item.OptionId > 0)
+                                    {
+                                        @item.OptionContent
+                                    }
+                                    else
+                                    {
+                                        <input type="text" class="form-control form-control-sm options" @bind="item.OptionContent" placeholder="Add Option" style="max-width:250px" />
+                                        <button type="button" @onclick="(()=>CreateOption(item))" class="btn btn-sm btn-outline-secondary">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
+                                                <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2" />
+                                            </svg>
+                                        </button>
+                                    }
+                                </div>
+                            }
+                            @foreach (var item in model.Options.Where(x => x.OptionId == 0).OrderBy(x => x.OptionId))
+                            {
+                                <div class="input-group mt-2">
+                                    <input type="radio" disabled />&nbsp;
+                                    @if (item.OptionId > 0)
+                                    {
+                                        @item.OptionContent
+                                    }
+                                    else
+                                    {
+                                        <input type="text" class="form-control form-control-sm options" @bind="item.OptionContent" placeholder="Add Option" style="max-width:250px" />
+                                        <button type="button" @onclick="(()=>CreateOption(item))" class="btn btn-sm btn-outline-secondary">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
+                                                <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2" />
+                                            </svg>
+                                        </button>
+                                    }
+                                </div>
+                                }
+                            }
+                    </div>
+                </div>
+            }
+
+            <div class="row mt-2">
+                <div class="col-12 text-right">
+                    <button class="btn btn-sm btn-outline-primary" type="button" @onclick="AddNewQuestion">Add Question</button>
+                </div>
+            </div>
+        }
+    </div>
+
+@code {
+
+    [Parameter] public List<Question> questionsModel { get; set; }
+    [Parameter] public string pollId { get; set; }
+    [Parameter] public string? pollName { get; set; }
+
+    Option newOption = new Option();
+
+    protected override void OnInitialized()
+    {
+        if (questionsModel == null)
+        {
+            questionsModel = new List<Question>()
+            {
+                new Question()
+                {
+                    PollId = pollId,
+                }
+            };
+        }
+        else
+        {
+            PopulateQuestions();
+        }
+    }
+
+    void CreateOption(Option option)
+    {
+        option.OptionId = _optionData.Create(option);
+        PopulateQuestions();
+    }
+
+    void PopulateQuestions()
+    {
+        questionsModel = _questionData.GetByPoll(pollId);
+        if (questionsModel != null)
+        {
+            foreach (var item in questionsModel.Where(x => x.Options.Count > 0))
+            {
+
+                item.Options.Add(
+                    new Option()
+                        {
+                            QuestionId = item.QuestionId
+                        });
+            }
+            foreach (var item in questionsModel.Where(x=>x.Options.Count == 0))
+            {
+                item.Options = new List<Option>()
+                {
+                     new Option()
+                     {
+                         QuestionId = item.QuestionId
+                     }
+                };
+            }
+        }
+    }
+    void AddNewQuestion()
+    {
+        var q = new Question()
+        {
+            PollId = pollId,
+        };
+        if (questionsModel == null)
+        {
+            questionsModel = new List<Question>();
+        }
+        q.SequenceNo = CreateFakeSeqNumber();
+        questionsModel.Add(q);
+    }
+    int CreateFakeSeqNumber()
+    {
+        int val = 0;
+        try
+        {
+            val = questionsModel.OrderBy(x => x.SequenceNo).LastOrDefault().SequenceNo;
+        }
+        catch
+        {
+
+        }
+        return val++;
+    }
+    void CreateQuestions(Question model)
+    {
+        if (model != null)
+        {
+            if (model.QuestionId != null)
+            {
+                model.QuestionId = _questionData.Update(model);
+            }
+            else
+            {
+                model.QuestionId = _questionData.Create(model);
+            }
+            model.Options = new List<Option>()
+            {
+                new Option()
+                {
+                    QuestionId = model.QuestionId
+                }
+            };
+        }
+        PopulateQuestions();
+    }
+    void DeleteQuestion(Question model)
+    {
+        if (model != null)
+        {
+            bool deleted = _questionData.Delete(model.QuestionId);
+            if (deleted)
+            {
+                _optionData.DeleteOptions(model.QuestionId);
+            }
+            PopulateQuestions();
+        }
+    }
+}
