@@ -132,6 +132,9 @@ public partial class PollDBContext : DbContext
             entity.Property(e => e.PublicId)
                 .HasMaxLength(50)
                 .IsUnicode(false);
+            entity.Property(e => e.AnswerId)
+                .HasMaxLength(100)
+                .IsUnicode(false);
         });
 
         OnModelCreatingPartial(modelBuilder);

@@ -96,7 +96,8 @@ namespace DataAccess.Services
                                     {
                                         SelectedOptionId = selected.SelectedOptionId,
                                         UserId = model.UserId,
-                                        PublicId = model.PublicId
+                                        PublicId = model.PublicId,
+                                        AnswerId = selected.AnswerId,
                                     });
                                 }
                             }

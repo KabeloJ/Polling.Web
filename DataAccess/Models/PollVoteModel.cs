@@ -24,6 +24,7 @@ namespace DataAccess.Models
         public List<Answer> Answers { get; set; }
         public string PublicId { get; set; }
         public string UserId { get; set; }
+        public int VotePer { get; set;}
 
     }
 }

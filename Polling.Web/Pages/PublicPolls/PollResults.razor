@@ -48,12 +48,14 @@
                                                             foreach (var item in answer.SelectedOptions.OrderBy(x => x.SelectedOptionId))
                                                             {
                                                                 <div class="input-group mt-2">
-                                                                    <span class="badge bg-info small text-black">
-                                                                        @UserVotes.Where(x => x.PublicId == answer.PollPublicId && x.SelectedOptionId == item.SelectedOptionId).Count()
-                                                                    </span>
                                                                     &nbsp;&nbsp;
                                                                     <input type="radio" id="Option-@item.SelectedOptionId" name="@item.AnswerId" disabled />
                                                                     <label for="Option-@item.SelectedOptionId">&nbsp;@item.OptionContent</label>
+                                                                </div>
+                                                                <div class="progress col-md-4">
+                                                                    <div class="progress-bar bg-success" role="progressbar" style="width: @item.Calculate(UserVotes.Where(x=>x.SelectedOptionId == item.SelectedOptionId).Count(), UserVotes.Where(x=>x.AnswerId == answer.AnswerId).Count())%" aria-valuenow="@UserVotes.Where(x => x.SelectedOptionId == item.SelectedOptionId).Count()" aria-valuemin="0" aria-valuemax="100">
+                                                                        @UserVotes.Where(x => x.PublicId == answer.PollPublicId && x.SelectedOptionId == item.SelectedOptionId).Count()
+                                                                    </div>
                                                                 </div>
                                                             }
                                                         }

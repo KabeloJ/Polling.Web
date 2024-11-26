@@ -10,4 +10,5 @@ public partial class UsersVote
     public int SelectedOptionId { get; set; }
 
     public string PublicId { get; set; } = null!;
+    public string? AnswerId { get; set; }
 }

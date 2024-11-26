@@ -32,12 +32,13 @@
     @if (publicPolls != null)
     {
         <h4>View Latest Polls</h4>
-        
+        @if (publicPolls.Count > 0)
+        {
             <div class="row">
 
-            @foreach (var item in publicPolls.OrderBy(x => x.DateCreated))
-            {
-                <div class="col-md-4">
+                @foreach (var item in publicPolls.OrderBy(x => x.DateCreated))
+                {
+                    <div class="col-md-4">
                         <div class="card p-2 m-2 bg-light">
                             <div class="row">
                                 <div class="col-12">
@@ -48,14 +49,14 @@
                             <div class="p-2">
                                 <div class="row">
                                     <div class="col-6">
-                                    @if (UserId != null && _service.CheckUserVote(UserId, item.PublicId))
-                                    {
-                                        <button type="button" class="btn btn-sm btn-primary" @onclick="(()=>CheckUserLogin(item.PublicId))" title="Click To View">Voted</button>
-                                    }
-                                    else
-                                    {
-                                        <button type="button" class="btn btn-sm btn-outline-primary" @onclick="(()=>CheckUserLogin(item.PublicId))">Vote</button>
-                                    }
+                                        @if (UserId != null && _service.CheckUserVote(UserId, item.PublicId))
+                                        {
+                                            <button type="button" class="btn btn-sm btn-primary" @onclick="(()=>CheckUserLogin(item.PublicId))" title="Click To View">Voted</button>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-primary" @onclick="(()=>CheckUserLogin(item.PublicId))">Vote</button>
+                                        }
                                     </div>
                                     <div class="col-6 text-right small text-nowrap">
                                         @item.DateCreated.ToShortDateString()
@@ -63,10 +64,17 @@
                                 </div>
                             </div>
 
+                        </div>
                     </div>
-                </div>
-            }
-        </div>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="text-black-50">
+                There are no polls at the moment
+            </p>
+        }
     }
 </div>
 @code {
