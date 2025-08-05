@@ -1,13 +1,11 @@
-﻿using DataAccess.Context;
-using DataAccess.Data;
-using DataAccess.Models;
+﻿
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataAccess.Services
+namespace Services
 {
     public class PollPublishService
     {
@@ -23,7 +21,7 @@ namespace DataAccess.Services
         /// </summary>
         /// <param name="poll"></param>
         /// <returns></returns>
-        public string Publish(Poll poll)
+        public string Publish(PollModel poll)
         {
             if (poll != null)
             {

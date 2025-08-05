@@ -1,22 +1,41 @@
-﻿using DataAccess.Context;
+﻿using Azure.Core;
+using Core.Answer;
+using DataAccess.Context;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Core.Answer.DataAccess;
 
 namespace DataAccess.Data
 {
-    public class AnswerDataAccess
+    public class AnswerDataAccess: IAnswerDataAccess
     {
-
-        public List<Answer> GetByPoll(string pollId)
+        public List<AnswerModel> GetByPoll(string pollId)
         {
             using (var db = new PollDBContext())
             {
-                return db.Answers.Where(x => x.PollPublicId == pollId).Include(x=>x.SelectedOptions).ToList();
+                var data = db.Answers.Where(x => x.PollPublicId == pollId).Include(x=>x.SelectedOptions).ToList();
+                return MapToModel(data);
             }
+        }
+        List<AnswerModel> MapToModel(List<Answer> answers)
+        {
+            List<AnswerModel> model = new List<AnswerModel>();
+            foreach (var item in answers)
+            {
+                model.Add(MapToModel(item));
+            }
+            return model;
+        }
+        AnswerModel MapToModel(Answer a)
+        {
+            AnswerModel model = new AnswerModel()
+            {
+               AnswerId = a.AnswerId,
+               PollPublicId = a.PollPublicId,
+               QuestionContent = a.QuestionContent,
+               QuestionId = a.QuestionId,
+               SequenceNo = a.SequenceNo
+            };
+            return model;
         }
     }
 }

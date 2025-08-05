@@ -1,12 +1,12 @@
-﻿using DataAccess.Context;
-using DataAccess.Data;
+﻿
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Core.Answer;
 
-namespace DataAccess.Models
+namespace Core.Polls
 {
     public class PollVoteModel
     {
@@ -14,14 +14,14 @@ namespace DataAccess.Models
         {
             var pollData = new PollDataAccess();
             PublicId = publicId;
-            poll = pollData.GetPublicPoll(PublicId);
+            PollModel = pollData.GetPublicPoll(PublicId);
 
             var _answers = new AnswerDataAccess();
-            Answers = _answers.GetByPoll(poll.PublicId);
+            AnswersModel = _answers.GetByPoll(PollModel.PublicId);
         }
 
-        public Poll poll { get; set; }
-        public List<Answer> Answers { get; set; }
+        public PollModel PollModel { get; set; }
+        public List<AnswerModel> AnswersModel { get; set; }
         public string PublicId { get; set; }
         public string UserId { get; set; }
         public int VotePer { get; set;}

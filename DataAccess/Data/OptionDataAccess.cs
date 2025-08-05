@@ -1,4 +1,6 @@
-﻿using DataAccess.Context;
+﻿using AutoMapper;
+using Core.Option;
+using DataAccess.Context;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,30 +11,35 @@ namespace DataAccess.Data
 {
     public class OptionDataAccess
     {
-        public int Create(Option model)
+        private readonly IMapper _map;
+        public OptionDataAccess(IMapper map)
+        {
+            _map = map;
+        }
+        public int Create(OptionModel model)
         {
             using (var db = new PollDBContext())
             {
-                db.Options.Add(model);
+                db.Options.Add(_map.Map<Option>(model));
                 db.SaveChanges();
                 return model.OptionId;
             }
         }
-        public Option Get(int optionId)
+        public OptionModel Get(int optionId)
         {
             using (var db = new PollDBContext())
             {
-                return db.Options.Find(optionId);
+                return _map.Map<OptionModel>(db.Options.Find(optionId));
             }
         }
-        public List<Option> GetByQuestion(string questionId)
+        public List<OptionModel> GetByQuestion(string questionId)
         {
             using (var db = new PollDBContext())
             {
-                return db.Options.Where(x => x.QuestionId == questionId).ToList();
+                return _map.Map<List<OptionModel>>(db.Options.Where(x => x.QuestionId == questionId).ToList());
             }
         }
-        public int Update(Option model)
+        public int Update(OptionModel model)
         {
             using (var db = new PollDBContext())
             {
